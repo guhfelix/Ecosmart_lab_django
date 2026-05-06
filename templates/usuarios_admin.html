@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="mb-4">Gerenciar Usuarios</h2>
+
+<div class="table-responsive">
+  <table class="table table-striped table-bordered align-middle">
+    <thead class="table-dark">
+      <tr>
+        <th>Nome</th><th>Email</th><th>Papel</th><th>Status</th><th>Acoes</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in usuarios %}
+      <tr>
+        <td>{{ u.nome }}</td>
+        <td>{{ u.email }}</td>
+        <td>
+          <form method="POST" action="{% url 'recompensas:alterar_papel' u.pk %}" class="d-flex gap-2">
+            {% csrf_token %}
+            <select name="papel" class="form-select form-select-sm">
+              <option value="CIDADAO" {% if u.papel == "CIDADAO" %}selected{% endif %}>CIDADAO</option>
+              <option value="GESTOR" {% if u.papel == "GESTOR" %}selected{% endif %}>GESTOR</option>
+              <option value="PARCEIRO" {% if u.papel == "PARCEIRO" %}selected{% endif %}>PARCEIRO</option>
+              <option value="ADMIN" {% if u.papel == "ADMIN" %}selected{% endif %}>ADMIN</option>
+            </select>
+            <button type="submit" class="btn btn-sm btn-outline-primary">Salvar</button>
+          </form>
+        </td>
+        <td>
+          <span class="badge {% if u.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+            {% if u.is_active %}Ativo{% else %}Desativado{% endif %}
+          </span>
+        </td>
+        <td>
+          <form method="POST" action="{% url 'recompensas:alterar_status' u.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm {% if u.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
+              {% if u.is_active %}Desativar{% else %}Ativar{% endif %}
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="mt-3 d-flex gap-2">
+  <a href="{% url 'recompensas:auditoria' %}" class="btn btn-outline-secondary btn-sm">Ver auditoria</a>
+  <a href="{% url 'core:index' %}" class="btn btn-outline-secondary btn-sm">Voltar</a>
+</div>
+{% endblock %}

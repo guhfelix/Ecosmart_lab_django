@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2><i class="bi bi-speedometer2 text-success"></i> Dashboard</h2>
+  <span class="text-muted small">Bem-vindo(a), <strong>{{ user.nome }}</strong>!</span>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card text-bg-success shadow-sm h-100">
+      <div class="card-body">
+        <h6 class="card-title"><i class="bi bi-recycle"></i> Total de Descartes</h6>
+        <p class="fs-2 fw-bold mb-0">{{ total_descartes }}</p>
+        <small>registros realizados</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card text-bg-primary shadow-sm h-100">
+      <div class="card-body">
+        <h6 class="card-title"><i class="bi bi-box-seam"></i> Peso Total</h6>
+        <p class="fs-2 fw-bold mb-0">{{ total_peso|floatformat:2 }} kg</p>
+        <small>de residuos descartados</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card text-bg-warning shadow-sm h-100">
+      <div class="card-body">
+        <h6 class="card-title"><i class="bi bi-star-fill"></i> Saldo de Pontos</h6>
+        <p class="fs-2 fw-bold mb-0">{{ user.saldo_pontos }}</p>
+        <small>pontos disponiveis para resgate</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-12"><h5 class="mb-3">Acoes Rapidas</h5></div>
+  <div class="col-md-3">
+    <a href="{% url 'coleta:descarte' %}" class="btn btn-outline-success w-100 py-3">
+      <i class="bi bi-recycle fs-4 d-block mb-1"></i> Registrar Descarte
+    </a>
+  </div>
+  <div class="col-md-3">
+    <a href="{% url 'coleta:pontos' %}" class="btn btn-outline-secondary w-100 py-3">
+      <i class="bi bi-geo-alt fs-4 d-block mb-1"></i> Pontos de Coleta
+    </a>
+  </div>
+  <div class="col-md-3">
+    <a href="{% url 'recompensas:beneficios' %}" class="btn btn-outline-warning w-100 py-3">
+      <i class="bi bi-gift fs-4 d-block mb-1"></i> Resgatar Beneficios
+    </a>
+  </div>
+  <div class="col-md-3">
+    <a href="{% url 'coleta:relatorio' %}" class="btn btn-outline-primary w-100 py-3">
+      <i class="bi bi-bar-chart-line fs-4 d-block mb-1"></i> Meu Relatorio
+    </a>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <h6 class="mb-0"><i class="bi bi-clock-history text-success"></i> Ultimos Descartes</h6>
+    <a href="{% url 'coleta:relatorio' %}" class="btn btn-sm btn-outline-success">Ver todos</a>
+  </div>
+  <div class="card-body p-0">
+    {% if ultimos_descartes %}
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr><th>Data/Hora</th><th>Tipo de Residuo</th><th>Peso (kg)</th><th>Pontos</th></tr>
+        </thead>
+        <tbody>
+          {% for d in ultimos_descartes %}
+          <tr>
+            <td>{{ d.data_hora|date:"d/m/Y H:i" }}</td>
+            <td>{{ d.tipo_residuo }}</td>
+            <td>{{ d.peso_kg|floatformat:2 }}</td>
+            <td><span class="badge bg-success">+{{ d.pontos_gerados }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="p-4 text-center text-muted">
+      <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+      Voce ainda nao realizou nenhum descarte.
+      <a href="{% url 'coleta:descarte' %}" class="d-block mt-2">Registrar agora</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
