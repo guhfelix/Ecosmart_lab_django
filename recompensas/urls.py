@@ -5,7 +5,7 @@ app_name = 'recompensas'
 
 urlpatterns = [
     # ── Cidadão ──────────────────────────────────────────────
-    path('beneficios/', views.beneficios, name='beneficios'),
+    path('beneficios/', views.BeneficiosView.as_view(), name='beneficios'),
     path('meus-resgates/', views.MeusResgatesView.as_view(), name='meus_resgates'),
 
     # ── Admin — Gestão de Benefícios ───────────────────────────

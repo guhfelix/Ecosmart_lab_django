@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render, get_object_or_404
+from django.views import View
 from django.views.generic import ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
 
@@ -33,21 +34,32 @@ def admin_required(view_func):
     return wrapper
 
 
-# ─────────────────────────────────────────────────────────────────
+# ───────────────────────────────────────────────────────────────
 # Cidadão — Benefícios e Resgates
-# ─────────────────────────────────────────────────────────────────
+# ───────────────────────────────────────────────────────────────
 
-@login_required
-def beneficios(request):
-    lista_beneficios = Beneficio.objects.filter(ativo=True)
 
-    if request.method == 'POST':
+class BeneficiosView(LoginRequiredMixin, View):
+    """
+    Catálogo de benefícios disponíveis para resgate.
+    GET  — lista todos os benefícios activos.
+    POST — processa o resgate do benefício seleccionado.
+    Convertida de função para Class-Based View para seguir
+    o padrão do projeto e facilitar futuras extensões.
+    """
+    template_name = 'beneficios.html'
+
+    def get(self, request):
+        beneficios = Beneficio.objects.filter(ativo=True)
+        return render(request, self.template_name, {'beneficios': beneficios})
+
+    def post(self, request):
         beneficio_id = request.POST.get('beneficio_id')
         beneficio = get_object_or_404(Beneficio, pk=beneficio_id, ativo=True)
 
         try:
             # Toda a lógica de negócio (verificação de saldo, dedução de pontos,
-            # geração de voucher e transação atómica) está encapsulada no modelo.
+            # geração de voucher e transação atômica) está encapsulada no modelo.
             resgate = beneficio.resgatar_para_usuario(request.user)
             # Recarrega o utilizador para refletir o novo saldo na sessão
             request.user.refresh_from_db(fields=['saldo_pontos'])
@@ -60,8 +72,6 @@ def beneficios(request):
             messages.error(request, str(e))
 
         return redirect('recompensas:meus_resgates')
-
-    return render(request, 'beneficios.html', {'beneficios': lista_beneficios})
 
 
 class MeusResgatesView(LoginRequiredMixin, ListView):
