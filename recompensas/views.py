@@ -1,9 +1,5 @@
-import random
-import string
-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db import transaction
 from django.shortcuts import redirect, render, get_object_or_404
 
 from .models import Beneficio, Resgate, Auditoria
@@ -21,28 +17,20 @@ def beneficios(request):
         beneficio_id = request.POST.get('beneficio_id')
         beneficio = get_object_or_404(Beneficio, pk=beneficio_id, ativo=True)
 
-        if request.user.saldo_pontos < beneficio.custo_pontos:
-            messages.error(request, 'Saldo de pontos insuficiente para este beneficio.')
-            return redirect('recompensas:beneficios')
-
-        codigo = 'ECO-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-
-        with transaction.atomic():
-            request.user.saldo_pontos -= beneficio.custo_pontos
-            request.user.save(update_fields=['saldo_pontos'])
-
-            Resgate.objects.create(
-                usuario=request.user,
-                beneficio=beneficio,
-                pontos_utilizados=beneficio.custo_pontos,
-                codigo_voucher=codigo,
-                status='ATIVO',
+        try:
+            # Toda a lógica de negócio (verificação de saldo, dedução de pontos,
+            # geração de voucher e transação atómica) está encapsulada no modelo.
+            resgate = beneficio.resgatar_para_usuario(request.user)
+            # Recarrega o utilizador para refletir o novo saldo na sessão
+            request.user.refresh_from_db(fields=['saldo_pontos'])
+            messages.success(
+                request,
+                f"Benefício '{beneficio.nome}' resgatado com sucesso! "
+                f"Código: {resgate.codigo_voucher}"
             )
+        except ValueError as e:
+            messages.error(request, str(e))
 
-        messages.success(
-            request,
-            f"Beneficio '{beneficio.nome}' resgatado com sucesso! Codigo: {codigo}"
-        )
         return redirect('recompensas:meus_resgates')
 
     return render(request, 'beneficios.html', {'beneficios': lista_beneficios})

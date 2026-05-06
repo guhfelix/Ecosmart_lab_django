@@ -33,19 +33,22 @@ class RegistrarDescarteView(LoginRequiredMixin, CreateView):
         return ctx
 
     def form_valid(self, form):
+        # Associa o utilizador antes de salvar.
+        # O modelo Descarte.save() calcula os pontos e atualiza o saldo
+        # automaticamente dentro de uma transação atómica.
         descarte = form.save(commit=False)
         descarte.usuario = self.request.user
-        descarte.pontos_gerados = int(descarte.peso_kg * 10)
         descarte.save()
 
         self.object = descarte
 
-        self.request.user.saldo_pontos += descarte.pontos_gerados
-        self.request.user.save(update_fields=['saldo_pontos'])
+        # Recarrega o utilizador da base de dados para refletir o novo saldo
+        self.request.user.refresh_from_db(fields=['saldo_pontos'])
 
         messages.success(
             self.request,
-            f'Descarte registrado! Você ganhou {descarte.pontos_gerados} pontos.'
+            f'Descarte registrado! Você ganhou {descarte.pontos_gerados} pontos. '
+            f'Saldo atual: {self.request.user.saldo_pontos} pontos.'
         )
 
         return redirect(self.success_url)
