@@ -1,39 +1,157 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2 class="mb-3">Registrar Descarte</h2>
+<h2 class="mb-3"><i class="bi bi-recycle text-success"></i> Registrar Descarte</h2>
 
 <div class="row">
   <div class="col-md-7">
     <div class="card shadow-sm">
       <div class="card-body">
-        <form method="POST">
+
+        {% if messages %}
+          {% for msg in messages %}
+            <div class="alert alert-{{ msg.tags|default:'info' }} alert-dismissible fade show" role="alert">
+              {{ msg }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        {# O formulário usa o DescarteForm do Django.
+           Os campos são renderizados manualmente para manter o visual Bootstrap,
+           mas os nomes (name="ponto", name="tipo_residuo", name="peso_kg")
+           são os mesmos definidos no ModelForm — garantindo compatibilidade total. #}
+        <form method="POST" novalidate>
           {% csrf_token %}
+
+          {# Campo: Ponto de Coleta #}
           <div class="mb-3">
-            <label class="form-label">Ponto de coleta</label>
-           <select name="ponto" class="form-select" required>
+            <label for="{{ form.ponto.id_for_label }}" class="form-label fw-semibold">
+              Ponto de Coleta <span class="text-danger">*</span>
+            </label>
+            <select
+              name="{{ form.ponto.html_name }}"
+              id="{{ form.ponto.id_for_label }}"
+              class="form-select {% if form.ponto.errors %}is-invalid{% endif %}"
+              required
+            >
+              <option value="">— Selecione um ponto —</option>
               {% for ponto in pontos %}
-              <option value="{{ ponto.id }}">{{ ponto.nome }} - {{ ponto.endereco }}</option>
+                <option value="{{ ponto.id }}"
+                  {% if form.ponto.value == ponto.id|stringformat:"s" %}selected{% endif %}>
+                  {{ ponto.nome }} — {{ ponto.endereco }}
+                </option>
               {% endfor %}
             </select>
+            {% if form.ponto.errors %}
+              <div class="invalid-feedback">{{ form.ponto.errors|join:", " }}</div>
+            {% endif %}
           </div>
 
+          {# Campo: Tipo de Resíduo #}
           <div class="mb-3">
-            <label class="form-label">Tipo de resíduo</label>
-            <input type="text" name="tipo_residuo" class="form-control"
-                   placeholder="Ex.: Eletrônico, Vidro, Papel" required>
+            <label for="{{ form.tipo_residuo.id_for_label }}" class="form-label fw-semibold">
+              Tipo de Resíduo <span class="text-danger">*</span>
+            </label>
+            <input
+              type="text"
+              name="{{ form.tipo_residuo.html_name }}"
+              id="{{ form.tipo_residuo.id_for_label }}"
+              value="{{ form.tipo_residuo.value|default:'' }}"
+              class="form-control {% if form.tipo_residuo.errors %}is-invalid{% endif %}"
+              placeholder="Ex.: Plástico, Vidro, Metal, Eletrônico..."
+              list="tipos-residuos"
+              required
+            >
+            {# Sugestões de autocomplete (sem forçar validação) #}
+            <datalist id="tipos-residuos">
+              <option value="Plástico">
+              <option value="Vidro">
+              <option value="Papel">
+              <option value="Papelão">
+              <option value="Metal">
+              <option value="Alumínio">
+              <option value="Eletrônico">
+              <option value="Pilhas">
+              <option value="Baterias">
+              <option value="Orgânico">
+              <option value="Têxtil">
+              <option value="Óleo">
+            </datalist>
+            {% if form.tipo_residuo.errors %}
+              <div class="invalid-feedback">{{ form.tipo_residuo.errors|join:", " }}</div>
+            {% endif %}
           </div>
 
+          {# Campo: Peso (kg) #}
           <div class="mb-3">
-            <label class="form-label">Peso (kg)</label>
-            <input type="number" step="0.01" min="0.01" name="peso_kg" class="form-control" required>
+            <label for="{{ form.peso_kg.id_for_label }}" class="form-label fw-semibold">
+              Peso (kg) <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+              <input
+                type="number"
+                name="{{ form.peso_kg.html_name }}"
+                id="{{ form.peso_kg.id_for_label }}"
+                value="{{ form.peso_kg.value|default:'' }}"
+                class="form-control {% if form.peso_kg.errors %}is-invalid{% endif %}"
+                step="0.01"
+                min="0.01"
+                placeholder="Ex.: 1.50"
+                required
+              >
+              <span class="input-group-text">kg</span>
+              {% if form.peso_kg.errors %}
+                <div class="invalid-feedback">{{ form.peso_kg.errors|join:", " }}</div>
+              {% endif %}
+            </div>
+            <div class="form-text text-muted">
+              <i class="bi bi-info-circle"></i>
+              Cada kg de resíduo gera <strong>10 pontos</strong>.
+            </div>
           </div>
 
-          <button type="submit" class="btn btn-success w-100">Registrar Descarte</button>
+          <button type="submit" class="btn btn-success w-100">
+            <i class="bi bi-check-circle me-1"></i> Registrar Descarte
+          </button>
         </form>
+
       </div>
     </div>
   </div>
-</div>
 
+  {# Painel lateral informativo #}
+  <div class="col-md-5 mt-3 mt-md-0">
+    <div class="card shadow-sm border-success">
+      <div class="card-header bg-success text-white">
+        <i class="bi bi-lightbulb-fill me-1"></i> Como funciona?
+      </div>
+      <div class="card-body">
+        <ol class="mb-0 ps-3">
+          <li class="mb-2">Selecione o ponto de coleta onde realizou o descarte.</li>
+          <li class="mb-2">Informe o tipo de resíduo descartado.</li>
+          <li class="mb-2">Informe o peso aproximado em quilogramas.</li>
+          <li>Cada <strong>1 kg</strong> gera <strong>10 pontos</strong> para resgate de benefícios.</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mt-3">
+      <div class="card-header bg-white fw-semibold">
+        <i class="bi bi-geo-alt text-success me-1"></i> Pontos disponíveis
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for ponto in pontos %}
+          <li class="list-group-item">
+            <strong>{{ ponto.nome }}</strong><br>
+            <small class="text-muted">{{ ponto.endereco }}</small>
+          </li>
+        {% empty %}
+          <li class="list-group-item text-muted">Nenhum ponto cadastrado.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+</div>
 {% endblock %}
