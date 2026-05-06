@@ -1,6 +1,8 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render, get_object_or_404
+from django.views.generic import ListView
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 from .models import Beneficio, Resgate, Auditoria
 
@@ -8,6 +10,32 @@ from .models import Beneficio, Resgate, Auditoria
 def _registrar_auditoria(usuario, acao):
     Auditoria.objects.create(usuario=usuario, acao=acao)
 
+
+# ─────────────────────────────────────────────────────────────────
+# Decoradores de permissão
+# ─────────────────────────────────────────────────────────────────
+
+def gestor_required(view_func):
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated or not request.user.is_gestor:
+            messages.error(request, 'Acesso restrito a gestores municipais.')
+            return redirect('core:index')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
+def admin_required(view_func):
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated or not request.user.is_admin_ecosmart:
+            messages.error(request, 'Acesso restrito ao administrador.')
+            return redirect('core:index')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
+# ─────────────────────────────────────────────────────────────────
+# Cidadão — Benefícios e Resgates
+# ─────────────────────────────────────────────────────────────────
 
 @login_required
 def beneficios(request):
@@ -36,100 +64,44 @@ def beneficios(request):
     return render(request, 'beneficios.html', {'beneficios': lista_beneficios})
 
 
-@login_required
-def meus_resgates(request):
-    resgates = (
-        Resgate.objects
-        .filter(usuario=request.user)
-        .select_related('beneficio')
-        .order_by('-data_resgate')
-    )
+class MeusResgatesView(LoginRequiredMixin, ListView):
+    """
+    Histórico de resgates do utilizador autenticado.
+    Substituiu a função meus_resgates() para seguir o padrão
+    de Class-Based Views do Django e eliminar lógica manual.
+    """
+    model = Resgate
+    template_name = 'meus_resgates.html'
+    context_object_name = 'resgates'
+    ordering = ['-data_resgate']
 
-    total_pontos_gastos = sum(r.pontos_utilizados for r in resgates)
-
-    return render(request, 'meus_resgates.html', {
-        'resgates': resgates,
-        'total_pontos_gastos': total_pontos_gastos,
-    })
-
-
-def gestor_required(view_func):
-    def wrapper(request, *args, **kwargs):
-        if not request.user.is_authenticated or not request.user.is_gestor:
-            messages.error(request, 'Acesso restrito a gestores municipais.')
-            return redirect('core:index')
-        return view_func(request, *args, **kwargs)
-    return wrapper
-
-
-def admin_required(view_func):
-    def wrapper(request, *args, **kwargs):
-        if not request.user.is_authenticated or not request.user.is_admin_ecosmart:
-            messages.error(request, 'Acesso restrito ao administrador.')
-            return redirect('core:index')
-        return view_func(request, *args, **kwargs)
-    return wrapper
-
-
-@login_required
-@gestor_required
-def admin_beneficios(request):
-    lista = Beneficio.objects.order_by('nome')
-    return render(request, 'beneficios_admin.html', {'beneficios': lista})
-
-
-@login_required
-@gestor_required
-def novo_beneficio(request):
-    if request.method == 'POST':
-        Beneficio.objects.create(
-            nome=request.POST['nome'],
-            descricao=request.POST.get('descricao', ''),
-            custo_pontos=int(request.POST['custo_pontos']),
-            tipo=request.POST.get('tipo', ''),
-            ativo=True,
+    def get_queryset(self):
+        return (
+            Resgate.objects
+            .filter(usuario=self.request.user)
+            .select_related('beneficio')
+            .order_by('-data_resgate')
         )
-        messages.success(request, 'Beneficio cadastrado com sucesso.')
-        return redirect('recompensas:admin_beneficios')
-    return render(request, 'beneficio_form.html', {'acao': 'Novo', 'beneficio': None})
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['total_pontos_gastos'] = sum(
+            r.pontos_utilizados for r in ctx['resgates']
+        )
+        return ctx
 
 
-@login_required
-@gestor_required
-def editar_beneficio(request, pk):
-    beneficio = get_object_or_404(Beneficio, pk=pk)
-    if request.method == 'POST':
-        beneficio.nome = request.POST['nome']
-        beneficio.descricao = request.POST.get('descricao', '')
-        beneficio.custo_pontos = int(request.POST['custo_pontos'])
-        beneficio.tipo = request.POST.get('tipo', '')
-        beneficio.save()
-        messages.success(request, 'Beneficio atualizado com sucesso.')
-        return redirect('recompensas:admin_beneficios')
-    return render(request, 'beneficio_form.html', {'acao': 'Editar', 'beneficio': beneficio})
+# ─────────────────────────────────────────────────────────────────
+# Admin — Gestão de Benefícios
+# NOTA: A gestão de Benefícios foi migrada para o Django Admin.
+# Acesse /django-admin/recompensas/beneficio/ para criar, editar,
+# ativar/desativar e excluir benefícios sem código manual.
+# ─────────────────────────────────────────────────────────────────
 
 
-@login_required
-@gestor_required
-def toggle_beneficio(request, pk):
-    if request.method == 'POST':
-        beneficio = get_object_or_404(Beneficio, pk=pk)
-        beneficio.ativo = not beneficio.ativo
-        beneficio.save()
-        estado = 'ativado' if beneficio.ativo else 'desativado'
-        messages.success(request, f"Beneficio '{beneficio.nome}' {estado}.")
-    return redirect('recompensas:admin_beneficios')
-
-
-@login_required
-@gestor_required
-def excluir_beneficio(request, pk):
-    if request.method == 'POST':
-        beneficio = get_object_or_404(Beneficio, pk=pk)
-        beneficio.delete()
-        messages.info(request, 'Beneficio excluido com sucesso.')
-    return redirect('recompensas:admin_beneficios')
-
+# ─────────────────────────────────────────────────────────────────
+# Admin — Gestão de Utilizadores e Auditoria
+# ─────────────────────────────────────────────────────────────────
 
 @login_required
 @admin_required

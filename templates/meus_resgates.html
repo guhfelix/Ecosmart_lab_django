@@ -61,8 +61,8 @@
           {% for r in resgates %}
           <tr>
             <td>{{ r.data_resgate|date:"d/m/Y H:i" }}</td>
-            <td>{{ r.nome_beneficio }}</td>
-            <td><span class="badge bg-secondary">{{ r.tipo_beneficio }}</span></td>
+            <td>{{ r.beneficio.nome }}</td>
+            <td><span class="badge bg-secondary">{{ r.beneficio.tipo }}</span></td>
             <td><span class="text-danger fw-bold">-{{ r.pontos_utilizados }}</span></td>
             <td>
               <code class="text-success fw-bold">{{ r.codigo_voucher }}</code>
