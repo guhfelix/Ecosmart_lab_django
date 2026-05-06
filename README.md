@@ -27,7 +27,7 @@ ecosmart_django/
 
 ```bash
 # 1. Clone o repositorio
-git clone https://github.com/guhfelix/Ecosmart_lab.git
+git clone https://github.com/guhfelix/Ecosmart_lab_django.git
 cd ecosmart_django
 
 # 2. Crie e ative um ambiente virtual
