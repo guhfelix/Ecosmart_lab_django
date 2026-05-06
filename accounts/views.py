@@ -1,7 +1,7 @@
-from django.shortcuts import render, redirect
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib import messages
-from django.urls import reverse_lazy
+from django.http import HttpResponseRedirect
+from django.urls import reverse_lazy, reverse
 from django.views.generic import CreateView
 from .forms import RegistroForm, LoginForm
 from .models import Usuario
@@ -23,7 +23,7 @@ class EcosmartLoginView(LoginView):
                 self.request,
                 'A sua conta esta desativada. Entre em contato com o administrador.'
             )
-            return redirect('accounts:login')
+            return HttpResponseRedirect(reverse('accounts:login'))
         messages.success(self.request, 'Login realizado com sucesso!')
         return super().form_valid(form)
 

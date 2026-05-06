@@ -1,3 +1,4 @@
+from accounts.forms import RegistroForm
 from django.test import TestCase
 
 from accounts.models import Usuario
@@ -111,7 +112,6 @@ class BeneficioResgateTest(TestCase):
 class RegistroFormTest(TestCase):
 
     def _dados_validos(self, **override):
-        from accounts.forms import RegistroForm
         dados = {
             'nome': 'João Silva',
             'email': 'joao@ecosmart.com',
@@ -122,7 +122,6 @@ class RegistroFormTest(TestCase):
         return dados
 
     def _form(self, **override):
-        from accounts.forms import RegistroForm
         return RegistroForm(data=self._dados_validos(**override))
 
     def test_formulario_valido(self):
