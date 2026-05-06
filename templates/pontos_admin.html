@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2 class="mb-3">Gestao de Pontos de Coleta</h2>
+
+<p>
+  <a href="/django-admin/coleta/pontocoleta/add/" class="btn btn-success btn-sm">
+    + Cadastrar novo ponto
+  </a>
+  <a href="{% url 'coleta:pontos' %}" class="btn btn-outline-secondary btn-sm ms-2">
+    Ver lista publica
+  </a>
+</p>
+
+{% if pontos %}
+<div class="row g-3 mt-2">
+  {% for p in pontos %}
+  <div class="col-12 col-md-6">
+    <div class="card h-100 shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">{{ p.nome }}</h5>
+        <p class="card-text mb-1"><strong>Endereco:</strong> {{ p.endereco }}</p>
+        <p class="card-text mb-1"><strong>Tipos aceitos:</strong> {{ p.tipos_aceitos }}</p>
+        {% if p.horario_funcionamento %}
+        <p class="card-text mb-2"><strong>Funcionamento:</strong> {{ p.horario_funcionamento }}</p>
+        {% endif %}
+        <div class="d-flex gap-2 mt-2">
+          <a href="/django-admin/coleta/pontocoleta/{{ p.pk }}/change/" class="btn btn-sm btn-outline-primary">Editar</a>
+          <a href="/django-admin/coleta/pontocoleta/{{ p.pk }}/delete/" class="btn btn-sm btn-outline-danger">Excluir</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+  <div class="alert alert-info mt-3">Nao ha pontos de coleta cadastrados.</div>
+{% endif %}
+
+{% endblock %}
