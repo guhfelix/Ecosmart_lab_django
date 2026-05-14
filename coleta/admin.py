@@ -4,8 +4,17 @@ from .models import PontoColeta, Descarte
 
 @admin.register(PontoColeta)
 class PontoColetaAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'endereco', 'tipos_aceitos', 'horario_funcionamento')
+    list_display = (
+        'nome',
+        'endereco',
+        'tipos_aceitos',
+        'horario_funcionamento',
+        'ativo',
+    )
+
+    list_filter = ('ativo', 'tipos_aceitos')
     search_fields = ('nome', 'endereco', 'tipos_aceitos')
+    list_editable = ('ativo',)
 
 
 @admin.register(Descarte)

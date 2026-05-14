@@ -11,13 +11,40 @@ class Usuario(AbstractUser):
     ]
 
     nome = models.CharField('Nome completo', max_length=100)
-    papel = models.CharField(
-        'Papel', max_length=20, choices=PAPEL_CHOICES, default='CIDADAO'
+    email = models.EmailField('E-mail', unique=True)
+
+    telefone = models.CharField(
+        'Telefone',
+        max_length=20,
+        blank=True,
+        default=''
     )
+
+    papel = models.CharField(
+        'Papel',
+        max_length=20,
+        choices=PAPEL_CHOICES,
+        default='CIDADAO'
+    )
+
     saldo_pontos = models.IntegerField('Saldo de Pontos', default=0)
     data_cadastro = models.DateTimeField('Data de Cadastro', auto_now_add=True)
 
-    email = models.EmailField('E-mail', unique=True)
+    receber_notificacoes = models.BooleanField(
+        'Receber notificações',
+        default=True
+    )
+
+    raio_busca_km = models.PositiveIntegerField(
+        'Raio de busca em km',
+        default=5
+    )
+
+    consentimento_lgpd_em = models.DateTimeField(
+        'Consentimento LGPD em',
+        null=True,
+        blank=True
+    )
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'nome']

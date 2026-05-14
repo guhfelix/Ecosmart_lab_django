@@ -125,3 +125,64 @@ class LoginForm(AuthenticationForm):
             'autocomplete': 'current-password',
         })
     )
+
+class PerfilForm(forms.ModelForm):
+    class Meta:
+        model = Usuario
+        fields = (
+            'nome',
+            'telefone',
+            'receber_notificacoes',
+            'raio_busca_km',
+        )
+
+        widgets = {
+            'nome': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Seu nome completo',
+            }),
+            'telefone': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '(65) 99999-9999',
+            }),
+            'receber_notificacoes': forms.CheckboxInput(attrs={
+                'class': 'form-check-input',
+            }),
+            'raio_busca_km': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '1',
+                'max': '50',
+            }),
+        }
+
+        labels = {
+            'nome': 'Nome completo',
+            'telefone': 'Telefone',
+            'receber_notificacoes': 'Desejo receber notificações',
+            'raio_busca_km': 'Raio de busca por pontos de coleta',
+        }
+
+    def clean_nome(self):
+        nome = self.cleaned_data.get('nome', '').strip()
+
+        if len(nome) < 3:
+            raise forms.ValidationError('O nome deve ter pelo menos 3 caracteres.')
+
+        if len(nome.split()) < 2:
+            raise forms.ValidationError('Informe nome e sobrenome.')
+
+        return nome.title()
+
+    def clean_raio_busca_km(self):
+        raio = self.cleaned_data.get('raio_busca_km')
+
+        if raio is None:
+            return 5
+
+        if raio < 1:
+            raise forms.ValidationError('O raio mínimo é 1 km.')
+
+        if raio > 50:
+            raise forms.ValidationError('O raio máximo permitido é 50 km.')
+
+        return raio

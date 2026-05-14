@@ -1,3 +1,5 @@
+from ast import arg
+
 from django import forms
 
 from .models import Descarte, PontoColeta
@@ -32,6 +34,7 @@ class DescarteForm(forms.ModelForm):
             'tipo_residuo': 'Tipo de Resíduo',
             'peso_kg': 'Peso (kg)',
         }
+
 
     def clean_peso_kg(self):
         """
@@ -82,19 +85,24 @@ class DescarteForm(forms.ModelForm):
         # Normaliza para Title Case (ex: "plástico" → "Plástico")
         return tipo.title()
 
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['ponto'].queryset = PontoColeta.objects.filter(ativo=True).order_by('nome')
+
     def clean_ponto(self):
         """
         Validação de backend para o campo ponto.
-        Garante que o ponto de coleta selecionado ainda existe na base de dados.
+        Garante que o ponto de coleta selecionado existe e está ativo.
         """
         ponto = self.cleaned_data.get('ponto')
 
         if not ponto:
             raise forms.ValidationError('Selecione um ponto de coleta válido.')
 
-        if not PontoColeta.objects.filter(pk=ponto.pk).exists():
+        if not PontoColeta.objects.filter(pk=ponto.pk, ativo=True).exists():
             raise forms.ValidationError(
-                'O ponto de coleta selecionado não existe ou foi removido.'
+                'O ponto de coleta selecionado não existe ou está inativo.'
             )
 
         return ponto

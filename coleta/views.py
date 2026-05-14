@@ -20,6 +20,9 @@ class PontosListView(LoginRequiredMixin, ListView):
     template_name = 'pontos.html'
     context_object_name = 'pontos'
 
+    def get_queryset(self):
+        return PontoColeta.objects.filter(ativo=True).order_by('nome')
+
 
 class RegistrarDescarteView(LoginRequiredMixin, CreateView):
     model = Descarte
@@ -29,7 +32,7 @@ class RegistrarDescarteView(LoginRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['pontos'] = PontoColeta.objects.all()
+        ctx['pontos'] = PontoColeta.objects.filter(ativo=True).order_by('nome')
         return ctx
 
     def form_valid(self, form):

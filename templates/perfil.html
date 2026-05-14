@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-3">Meu Perfil</h2>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <p class="text-muted">
+                Atualize seus dados pessoais e preferências de uso do EcoSmart.
+            </p>
+
+            <form method="post">
+                {% csrf_token %}
+
+                {{ form|crispy }}
+
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-success">
+                        Salvar alterações
+                    </button>
+
+                    <a href="{% url 'core:dashboard' %}" class="btn btn-secondary">
+                        Voltar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card mt-4 shadow-sm">
+        <div class="card-body">
+            <h5>Informações da conta</h5>
+
+            <p><strong>E-mail:</strong> {{ user.email }}</p>
+            <p><strong>Papel:</strong> {{ user.get_papel_display }}</p>
+            <p><strong>Saldo de pontos:</strong> {{ user.saldo_pontos }} pontos</p>
+            <p><strong>Data de cadastro:</strong> {{ user.data_cadastro|date:"d/m/Y H:i" }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

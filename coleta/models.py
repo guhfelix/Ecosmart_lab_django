@@ -14,6 +14,8 @@ class PontoColeta(models.Model):
     latitude = models.FloatField('Latitude', null=True, blank=True)
     longitude = models.FloatField('Longitude', null=True, blank=True)
 
+    ativo = models.BooleanField('Ativo', default=True)
+
     class Meta:
         verbose_name = 'Ponto de Coleta'
         verbose_name_plural = 'Pontos de Coleta'
