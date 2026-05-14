@@ -1,0 +1,429 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  /* ── Cards gerais ───────────────────────────────────────────── */
+  .dashboard-card {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .dashboard-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.10);
+  }
+
+  /* ── Hero banner ────────────────────────────────────────────── */
+  .dashboard-hero {
+    background: linear-gradient(135deg, #198754 0%, #20c997 100%);
+    border-radius: 22px;
+    color: white;
+    padding: 28px 32px;
+    box-shadow: 0 12px 30px rgba(25, 135, 84, 0.22);
+    position: relative;
+    overflow: hidden;
+  }
+  .dashboard-hero::after {
+    content: "\F1D8";
+    font-family: "bootstrap-icons";
+    position: absolute;
+    right: -10px;
+    bottom: -20px;
+    font-size: 9rem;
+    opacity: 0.07;
+    color: white;
+    pointer-events: none;
+  }
+
+  /* ── Ícones de estatística ──────────────────────────────────── */
+  .stat-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+  }
+  .stat-success  { background: rgba(25,135,84,.12);  color: #198754; }
+  .stat-primary  { background: rgba(13,110,253,.12); color: #0d6efd; }
+  .stat-warning  { background: rgba(255,193,7,.20);  color: #b58100; }
+  .stat-info     { background: rgba(13,202,240,.15); color: #0a9db5; }
+  .stat-danger   { background: rgba(220,53,69,.12);  color: #dc3545; }
+
+  /* ── Acções rápidas ─────────────────────────────────────────── */
+  .quick-action { text-decoration: none; color: inherit; }
+  .quick-action .card {
+    border: 1px solid #eef0f2;
+    border-radius: 18px;
+    transition: all 0.2s ease;
+  }
+  .quick-action .card:hover {
+    border-color: #198754;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(25,135,84,.12);
+  }
+  .quick-icon {
+    width: 46px; height: 46px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 12px;
+    font-size: 1.3rem;
+  }
+
+  /* ── Tabela ─────────────────────────────────────────────────── */
+  .table thead th {
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    color: #6c757d;
+    letter-spacing: 0.03em;
+  }
+  .empty-state { padding: 42px 20px; }
+
+  /* ── Barra de progresso de pontos ───────────────────────────── */
+  .pontos-progress-label {
+    font-size: 0.78rem;
+    color: #6c757d;
+  }
+
+  /* ── Card de impacto ambiental ──────────────────────────────── */
+  .impact-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .impact-label {
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.8);
+    margin-top: 2px;
+  }
+  .impact-item {
+    text-align: center;
+    padding: 0 16px;
+  }
+  .impact-divider {
+    width: 1px;
+    background: rgba(255,255,255,0.25);
+    align-self: stretch;
+  }
+</style>
+
+{# ── Hero ──────────────────────────────────────────────────────── #}
+<div class="dashboard-hero mb-4">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+    <div>
+      <span class="badge bg-light text-success mb-2" style="font-size:.75rem;">
+        <i class="bi bi-leaf-fill me-1"></i>EcoSmart Lab
+      </span>
+      <h2 class="fw-bold mb-1">
+        <i class="bi bi-speedometer2 me-2"></i>Dashboard
+      </h2>
+      <p class="mb-0 opacity-75">
+        Bem-vindo(a), <strong>{{ user.nome|default:user.username }}</strong>.
+        Acompanhe o seu impacto sustentável.
+      </p>
+    </div>
+    <div class="text-md-end">
+      <a href="{% url 'coleta:descarte' %}" class="btn btn-light text-success fw-semibold">
+        <i class="bi bi-plus-circle me-1"></i>Registrar descarte
+      </a>
+    </div>
+  </div>
+
+  {# Impacto ambiental estimado #}
+  {% if total_peso and total_peso > 0 %}
+  <div class="d-flex flex-wrap gap-0 mt-4 pt-3 border-top border-white border-opacity-25">
+    <div class="impact-item">
+      <div class="impact-value">{{ total_peso|floatformat:1 }} kg</div>
+      <div class="impact-label">resíduos desviados</div>
+    </div>
+    <div class="impact-divider mx-3 d-none d-sm-block"></div>
+    <div class="impact-item">
+      {# Estimativa: 1 kg de resíduo ≈ 0.5 kg CO₂ evitado #}
+      <div class="impact-value">{{ total_peso|floatformat:1 }}</div>
+      <div class="impact-label">árvores equivalentes</div>
+    </div>
+    <div class="impact-divider mx-3 d-none d-sm-block"></div>
+    <div class="impact-item">
+      <div class="impact-value">{{ total_descartes }}</div>
+      <div class="impact-label">acções realizadas</div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{# ── Estatísticas ──────────────────────────────────────────────── #}
+<div class="row g-3 mb-4">
+
+  <div class="col-sm-6 col-lg-3">
+    <div class="card dashboard-card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <p class="text-muted mb-1 small">Total de descartes</p>
+            <h2 class="fw-bold mb-0">{{ total_descartes }}</h2>
+            <small class="text-muted">registros realizados</small>
+          </div>
+          <div class="stat-icon stat-success"><i class="bi bi-recycle"></i></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-lg-3">
+    <div class="card dashboard-card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <p class="text-muted mb-1 small">Peso total</p>
+            <h2 class="fw-bold mb-0">{{ total_peso|floatformat:2 }} kg</h2>
+            <small class="text-muted">de resíduos descartados</small>
+          </div>
+          <div class="stat-icon stat-primary"><i class="bi bi-box-seam"></i></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-lg-3">
+    <div class="card dashboard-card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <p class="text-muted mb-1 small">Saldo de pontos</p>
+            <h2 class="fw-bold mb-0">{{ user.saldo_pontos|default:0 }}</h2>
+            <small class="text-muted">pontos disponíveis</small>
+          </div>
+          <div class="stat-icon stat-warning"><i class="bi bi-star-fill"></i></div>
+        </div>
+        {# Barra de progresso até próximo nível (cada 500 pts = 1 nível) #}
+        {% with pts=user.saldo_pontos|default:0 %}
+        {% with pct=pts|add:0 %}
+        <div class="mt-2">
+          <div class="d-flex justify-content-between pontos-progress-label mb-1">
+            <span>Nível {{ pts|add:0|divisibleby:500|yesno:"completo,em progresso" }}</span>
+            <span>{{ pts }} / 500 pts</span>
+          </div>
+          <div class="progress" style="height:6px; border-radius:4px;">
+            <div class="progress-bar bg-warning"
+                 role="progressbar"
+                 style="width: {% widthratio pts 500 100 %}%"
+                 aria-valuenow="{{ pts }}" aria-valuemin="0" aria-valuemax="500">
+            </div>
+          </div>
+        </div>
+        {% endwith %}
+        {% endwith %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-lg-3">
+    <div class="card dashboard-card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <p class="text-muted mb-1 small">Total gerado</p>
+            <h2 class="fw-bold mb-0">{{ total_pontos_gerados|default:0 }}</h2>
+            <small class="text-muted">pontos acumulados</small>
+          </div>
+          <div class="stat-icon stat-info"><i class="bi bi-graph-up-arrow"></i></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{# ── Acções rápidas ────────────────────────────────────────────── #}
+<div class="mb-4">
+  <h5 class="fw-bold mb-3">
+    <i class="bi bi-lightning-charge text-success me-1"></i>Ações rápidas
+  </h5>
+  <div class="row g-3">
+
+    <div class="col-6 col-md-3">
+      <a href="{% url 'coleta:descarte' %}" class="quick-action">
+        <div class="card h-100">
+          <div class="card-body">
+            <div class="quick-icon stat-success"><i class="bi bi-recycle"></i></div>
+            <h6 class="fw-bold mb-1">Registrar Descarte</h6>
+            <small class="text-muted">Informe um novo descarte.</small>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <a href="{% url 'coleta:pontos' %}" class="quick-action">
+        <div class="card h-100">
+          <div class="card-body">
+            <div class="quick-icon stat-primary"><i class="bi bi-geo-alt"></i></div>
+            <h6 class="fw-bold mb-1">Pontos de Coleta</h6>
+            <small class="text-muted">Locais disponíveis para descarte.</small>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <a href="{% url 'recompensas:beneficios' %}" class="quick-action">
+        <div class="card h-100">
+          <div class="card-body">
+            <div class="quick-icon stat-warning"><i class="bi bi-gift"></i></div>
+            <h6 class="fw-bold mb-1">Benefícios</h6>
+            <small class="text-muted">Resgate vantagens com seus pontos.</small>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <a href="{% url 'coleta:relatorio' %}" class="quick-action">
+        <div class="card h-100">
+          <div class="card-body">
+            <div class="quick-icon stat-info"><i class="bi bi-bar-chart-line"></i></div>
+            <h6 class="fw-bold mb-1">Meu Relatório</h6>
+            <small class="text-muted">Histórico completo de descartes.</small>
+          </div>
+        </div>
+      </a>
+    </div>
+
+  </div>
+</div>
+
+{# ── Últimos descartes ─────────────────────────────────────────── #}
+<div class="card dashboard-card mb-4">
+  <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+    <div>
+      <h5 class="fw-bold mb-1">
+        <i class="bi bi-clock-history text-success me-1"></i>Últimos descartes
+      </h5>
+      <small class="text-muted">Histórico recente das suas ações sustentáveis.</small>
+    </div>
+    <a href="{% url 'coleta:relatorio' %}" class="btn btn-sm btn-outline-success">Ver todos</a>
+  </div>
+
+  <div class="card-body p-0">
+    {% if ultimos_descartes %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-4">Data/Hora</th>
+              <th>Tipo de Resíduo</th>
+              <th>Peso</th>
+              <th>Ponto de Coleta</th>
+              <th class="pe-4">Pontos</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in ultimos_descartes %}
+              <tr>
+                <td class="ps-4">
+                  <span class="fw-semibold">{{ d.data_hora|date:"d/m/Y" }}</span><br>
+                  <small class="text-muted">{{ d.data_hora|date:"H:i" }}</small>
+                </td>
+                <td>
+                  <span class="badge text-bg-light border">
+                    {{ d.tipo_residuo|default:"Não informado" }}
+                  </span>
+                </td>
+                <td>{{ d.peso_kg|floatformat:2 }} kg</td>
+                <td>
+                  <small class="text-muted">{{ d.ponto.nome|default:"—" }}</small>
+                </td>
+                <td class="pe-4">
+                  <span class="badge bg-success rounded-pill">+{{ d.pontos_gerados }} pts</span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state text-center text-muted">
+        <div class="stat-icon stat-success mx-auto mb-3">
+          <i class="bi bi-inbox"></i>
+        </div>
+        <h6 class="fw-bold text-dark">Nenhum descarte registrado ainda</h6>
+        <p class="mb-3">Registre o seu primeiro descarte para começar a acompanhar o seu impacto.</p>
+        <a href="{% url 'coleta:descarte' %}" class="btn btn-success">
+          <i class="bi bi-plus-circle me-1"></i>Registrar agora
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+{# ── Painel de Gestão (apenas GESTOR / ADMIN) ──────────────────── #}
+{% if user.is_gestor or user.is_admin_ecosmart %}
+<div class="card dashboard-card border-start border-4 border-warning">
+  <div class="card-header bg-white border-0 pt-4 px-4">
+    <h5 class="fw-bold mb-1">
+      <i class="bi bi-shield-lock text-warning me-1"></i>Painel de Gestão
+    </h5>
+    <small class="text-muted">Acesso restrito a gestores e administradores.</small>
+  </div>
+  <div class="card-body">
+    <div class="row g-3">
+
+      <div class="col-sm-6 col-lg-3">
+        <a href="{% url 'coleta:admin_relatorios' %}" class="quick-action">
+          <div class="card h-100">
+            <div class="card-body">
+              <div class="quick-icon stat-info"><i class="bi bi-graph-up"></i></div>
+              <h6 class="fw-bold mb-1">Relatórios Globais</h6>
+              <small class="text-muted">Visão consolidada de todos os descartes.</small>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-sm-6 col-lg-3">
+        <a href="{% url 'recompensas:admin_usuarios' %}" class="quick-action">
+          <div class="card h-100">
+            <div class="card-body">
+              <div class="quick-icon stat-primary"><i class="bi bi-people"></i></div>
+              <h6 class="fw-bold mb-1">Gerir Utilizadores</h6>
+              <small class="text-muted">Alterar papéis e status de acesso.</small>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-sm-6 col-lg-3">
+        <a href="/django-admin/recompensas/beneficio/" class="quick-action">
+          <div class="card h-100">
+            <div class="card-body">
+              <div class="quick-icon stat-warning"><i class="bi bi-gift"></i></div>
+              <h6 class="fw-bold mb-1">Gerir Benefícios</h6>
+              <small class="text-muted">Criar e activar benefícios no Admin.</small>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      {% if user.is_admin_ecosmart %}
+      <div class="col-sm-6 col-lg-3">
+        <a href="{% url 'recompensas:auditoria' %}" class="quick-action">
+          <div class="card h-100">
+            <div class="card-body">
+              <div class="quick-icon stat-danger"><i class="bi bi-shield-check"></i></div>
+              <h6 class="fw-bold mb-1">Auditoria</h6>
+              <small class="text-muted">Registo de todas as acções do sistema.</small>
+            </div>
+          </div>
+        </a>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
