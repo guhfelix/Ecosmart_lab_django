@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db import models, transaction
 
 
@@ -65,10 +66,9 @@ class Descarte(models.Model):
         """
         Sobrescreve o save() para garantir que:
         1. Os pontos gerados são sempre calculados automaticamente.
-        2. O saldo do utilizador é atualizado na mesma transação atómica,
-           evitando inconsistências caso o save() falhe a meio.
+        2. O saldo do usuário é atualizado na mesma transação atômica.
         """
-        is_new = self.pk is None  # True apenas na criação, não em edições
+        is_new = self.pk is None
 
         if is_new:
             self.pontos_gerados = self.calcular_pontos()
@@ -77,9 +77,9 @@ class Descarte(models.Model):
             super().save(*args, **kwargs)
 
             if is_new and self.usuario_id:
-                # Usa F() + update() para evitar condições de corrida
-                # e garantir que apenas o campo saldo_pontos é alterado
-                type(self.usuario).objects.filter(pk=self.usuario_id).update(
+                User = get_user_model()
+
+                User.objects.filter(pk=self.usuario_id).update(
                     saldo_pontos=models.F('saldo_pontos') + self.pontos_gerados
                 )
 
