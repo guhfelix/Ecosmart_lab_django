@@ -5,15 +5,31 @@ from .models import Usuario
 
 @admin.register(Usuario)
 class UsuarioAdmin(UserAdmin):
-    list_display = ('email', 'nome', 'papel', 'saldo_pontos', 'is_active', 'data_cadastro')
+    list_display = (
+        'email',
+        'nome',
+        'papel',
+        'telefone',
+        'saldo_pontos',
+        'is_active',
+        'data_cadastro',
+    )
     list_filter = ('papel', 'is_active', 'is_staff')
     search_fields = ('email', 'nome')
     ordering = ('nome',)
 
     fieldsets = (
         (None, {'fields': ('email', 'username', 'password')}),
-        ('Informacoes Pessoais', {'fields': ('nome', 'first_name', 'last_name')}),
-        ('EcoSmart', {'fields': ('papel', 'saldo_pontos')}),
+        ('Informacoes Pessoais', {'fields': ('nome', 'telefone', 'first_name', 'last_name')}),
+        ('EcoSmart', {
+            'fields': (
+                'papel',
+                'saldo_pontos',
+                'receber_notificacoes',
+                'raio_busca_km',
+                'consentimento_lgpd_em',
+            )
+        }),
         ('Permissoes', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         ('Datas', {'fields': ('last_login', 'date_joined')}),
     )
@@ -21,6 +37,6 @@ class UsuarioAdmin(UserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'username', 'nome', 'papel', 'password1', 'password2'),
+            'fields': ('email', 'username', 'nome', 'telefone', 'papel', 'password1', 'password2'),
         }),
     )

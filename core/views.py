@@ -48,7 +48,7 @@ def api_pontos(request):
     GET /api/v1/pontos/
     Retorna todos os pontos de coleta com coordenadas para uso em mapas.
     """
-    pontos = list(PontoColeta.objects.all().values(
+    pontos = list(PontoColeta.objects.filter(ativo=True).values(
         'id', 'nome', 'endereco', 'tipos_aceitos',
         'horario_funcionamento', 'latitude', 'longitude',
     ))

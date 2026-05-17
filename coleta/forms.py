@@ -1,14 +1,6 @@
-from ast import arg
-
 from django import forms
 
 from .models import Descarte, PontoColeta
-
-# Tipos de resíduos aceitos pelo sistema (usados na validação e no autocomplete)
-TIPOS_RESIDUOS_VALIDOS = [
-    'Plástico', 'Vidro', 'Papel', 'Papelão', 'Metal', 'Alumínio',
-    'Eletrônico', 'Pilhas', 'Baterias', 'Orgânico', 'Têxtil', 'Óleo',
-]
 
 
 class DescarteForm(forms.ModelForm):
@@ -56,7 +48,7 @@ class DescarteForm(forms.ModelForm):
         if peso > 5000:
             raise forms.ValidationError(
                 'Para descartes acima de 5.000 kg (5 toneladas), '
-                'entre em contacto com a gestão municipal.'
+                'entre em contato com a gestão municipal.'
             )
 
         return round(peso, 2)

@@ -5,7 +5,7 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy, reverse
 from django.views.generic import CreateView, UpdateView
 
-from .forms import RegistroForm, LoginForm
+from .forms import RegistroForm, LoginForm, PerfilForm
 from .models import Usuario
 
 
@@ -57,7 +57,7 @@ class RegistroView(CreateView):
 
 class PerfilView(LoginRequiredMixin, UpdateView):
     model = Usuario
-    fields = ['nome', 'email']
+    form_class = PerfilForm
     template_name = 'perfil.html'
     success_url = reverse_lazy('accounts:perfil')
 
