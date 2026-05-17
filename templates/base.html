@@ -225,13 +225,13 @@
                     </div>
                     {% endif %}
 
-                    <div class="ecosmart-user-box">
+                    <a href="{% url 'accounts:perfil' %}" class="ecosmart-user-box text-decoration-none d-block">
                         <div class="ecosmart-user-name">
                             <i class="bi bi-person-circle me-1 text-success"></i>
                             {{ user.nome|default:user.username }}
                         </div>
+
                         <div class="d-flex align-items-center gap-2 mt-1">
-                            {# Badge de papel com cor por role #}
                             {% if user.papel == 'ADMIN' %}
                                 <span class="badge bg-danger" style="font-size:0.7rem;">ADMIN</span>
                             {% elif user.papel == 'GESTOR' %}
@@ -239,12 +239,12 @@
                             {% else %}
                                 <span class="badge bg-success" style="font-size:0.7rem;">CIDADÃO</span>
                             {% endif %}
-                            {# Saldo de pontos #}
+
                             <span class="badge bg-light text-success border border-success" style="font-size:0.7rem;">
                                 <i class="bi bi-star-fill me-1"></i>{{ user.saldo_pontos|default:0 }} pts
                             </span>
                         </div>
-                    </div>
+                    </a>
 
                     <form method="post" action="{% url 'accounts:logout' %}" class="logout-form d-inline">
                         {% csrf_token %}

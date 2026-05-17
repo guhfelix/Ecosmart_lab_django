@@ -1,11 +1,11 @@
-from django.shortcuts import redirect
-from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib import messages
-from django.urls import reverse_lazy
+from django.http import HttpResponseRedirect
+from django.urls import reverse_lazy, reverse
 from django.views.generic import CreateView, UpdateView
 
-from .forms import RegistroForm, LoginForm, PerfilForm
+from .forms import RegistroForm, LoginForm
 from .models import Usuario
 
 
@@ -26,12 +26,8 @@ class EcosmartLoginView(LoginView):
                 self.request,
                 'A sua conta está desativada. Entre em contato com o administrador.'
             )
-<<<<<<< HEAD
             return HttpResponseRedirect(reverse('accounts:login'))
-=======
-            return redirect('accounts:login')
 
->>>>>>> 07f5b55 (Commit das atualizações)
         messages.success(self.request, 'Login realizado com sucesso!')
         return super().form_valid(form)
 
@@ -40,7 +36,6 @@ class EcosmartLogoutView(LogoutView):
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
             messages.info(request, 'Sessão encerrada.')
-
         return super().dispatch(request, *args, **kwargs)
 
 
@@ -62,7 +57,7 @@ class RegistroView(CreateView):
 
 class PerfilView(LoginRequiredMixin, UpdateView):
     model = Usuario
-    form_class = PerfilForm
+    fields = ['nome', 'email']
     template_name = 'perfil.html'
     success_url = reverse_lazy('accounts:perfil')
 
@@ -74,5 +69,5 @@ class PerfilView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
     def form_invalid(self, form):
-        messages.error(self.request, 'Corrija os erros do formulário.')
+        messages.error(self.request, 'Corrija os erros abaixo.')
         return super().form_invalid(form)
